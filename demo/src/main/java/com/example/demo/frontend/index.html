@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlacePrep — Placement Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --surface2:  #1f2937;
+    --border:    #30363d;
+    --indigo:    #6366f1;
+    --indigo-dim:#3730a3;
+    --emerald:   #10b981;
+    --amber:     #f59e0b;
+    --rose:      #f43f5e;
+    --sky:       #38bdf8;
+    --text:      #e6edf3;
+    --muted:     #8b949e;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0; left: 0; height: 100vh;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--indigo);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 14px;
+    color: #fff;
+  }
+  .logo-text {
+    font-weight: 600; font-size: 15px; color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .logo-text span { color: var(--indigo); }
+
+  nav { padding: 12px 10px; flex: 1; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 8px 10px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 6px;
+    cursor: pointer; font-size: 13.5px; font-weight: 500;
+    color: var(--muted); transition: all .15s;
+    margin-bottom: 2px; border: none; background: none;
+    width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(99,102,241,.15); color: var(--indigo); }
+  .nav-item .ni-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; opacity: .6; flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 16px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+  }
+  .sidebar-footer strong { color: var(--indigo); font-family: var(--mono); }
+
+  /* ── Main ── */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-size: 18px; font-weight: 600; }
+  .topbar-title span { color: var(--indigo); }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    padding: 7px 16px; border-radius: 6px; border: none;
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+  }
+  .btn-primary {
+    background: var(--indigo); color: #fff;
+  }
+  .btn-primary:hover { background: #818cf8; }
+  .btn-ghost {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-danger { background: var(--rose); color: #fff; }
+  .btn-danger:hover { background: #fb7185; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  .content { padding: 28px; flex: 1; }
+
+  /* ── Pages ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Dashboard ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    height: 3px; width: 100%;
+  }
+  .stat-card.total::before { background: var(--indigo); }
+  .stat-card.done::before  { background: var(--emerald); }
+  .stat-card.going::before { background: var(--amber); }
+  .stat-card.notyet::before{ background: var(--rose); }
+  .stat-card.dsa::before   { background: var(--sky); }
+
+  .stat-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--mono); font-size: 38px; font-weight: 700;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .stat-card.total .stat-value  { color: var(--indigo); }
+  .stat-card.done  .stat-value  { color: var(--emerald); }
+  .stat-card.going .stat-value  { color: var(--amber); }
+  .stat-card.notyet .stat-value { color: var(--rose); }
+  .stat-card.dsa   .stat-value  { color: var(--sky); }
+  .stat-sub { font-size: 12px; color: var(--muted); }
+
+  /* Progress ring */
+  .ring-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    margin-bottom: 24px;
+  }
+  .ring-wrap { position: relative; flex-shrink: 0; }
+  svg.progress-ring { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--surface2); }
+  .ring-fg {
+    fill: none; stroke: var(--indigo);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  .ring-label {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .ring-pct {
+    font-family: var(--mono); font-size: 26px; font-weight: 700;
+    color: var(--indigo);
+  }
+  .ring-sub-text { font-size: 11px; color: var(--muted); }
+  .ring-info h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .ring-info p { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+  .progress-bar-row {
+    display: flex; align-items: center; gap: 10px; margin-top: 16px;
+  }
+  .prog-bar {
+    flex: 1; height: 6px;
+    background: var(--surface2); border-radius: 3px;
+    overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 1s ease;
+  }
+  .prog-label { font-size: 11px; color: var(--muted); width: 60px; }
+  .prog-count { font-family: var(--mono); font-size: 12px; width: 20px; text-align: right; }
+
+  /* ── Topics Table ── */
+  .table-controls {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px 12px 8px 36px;
+    font-size: 13.5px; font-family: var(--sans);
+    outline: none;
+  }
+  .search-wrap input:focus { border-color: var(--indigo); }
+  .search-icon {
+    position: absolute; left: 11px; top: 50%;
+    transform: translateY(-50%); color: var(--muted);
+    font-size: 14px; pointer-events: none;
+  }
+  select.filter-sel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 8px 12px;
+    font-size: 13px; font-family: var(--sans); outline: none; cursor: pointer;
+  }
+  select.filter-sel:focus { border-color: var(--indigo); }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    padding: 12px 16px; text-align: left;
+    font-size: 11px; font-weight: 600; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--muted);
+  }
+  td {
+    padding: 13px 16px; font-size: 13.5px;
+    border-bottom: 1px solid rgba(48,54,61,.6);
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .1s; }
+  tbody tr:hover { background: rgba(255,255,255,.02); }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: .3px;
+  }
+  .badge-completed { background: rgba(16,185,129,.15); color: var(--emerald); }
+  .badge-ongoing   { background: rgba(245,158,11,.15); color: var(--amber); }
+  .badge-notstarted{ background: rgba(244,63,94,.15);  color: var(--rose); }
+  .badge-dsa  { background: rgba(56,189,248,.15); color: var(--sky); }
+  .badge-os   { background: rgba(167,139,250,.15); color: #a78bfa; }
+  .badge-cn   { background: rgba(251,191,36,.15);  color: #fbbf24; }
+  .badge-dbms { background: rgba(52,211,153,.15);  color: #34d399; }
+  .badge-other{ background: rgba(139,148,158,.15); color: var(--muted); }
+
+  .hours-bar {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hours-track {
+    width: 70px; height: 5px;
+    background: var(--surface2); border-radius: 3px; overflow: hidden;
+  }
+  .hours-fill { height: 100%; border-radius: 3px; background: var(--indigo); }
+  .hours-num {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    min-width: 30px;
+  }
+
+  .action-btns { display: flex; gap: 6px; }
+  .empty-row td {
+    text-align: center; padding: 40px; color: var(--muted); font-size: 14px;
+  }
+
+  /* ── Modal ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(3px);
+    z-index: 200; display: none;
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 440px; max-width: 95vw;
+    padding: 28px;
+    animation: modalIn .2s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(.95) translateY(-10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-title {
+    font-size: 17px; font-weight: 600; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-close {
+    background: none; border: none; color: var(--muted);
+    font-size: 20px; cursor: pointer; line-height: 1;
+  }
+  .modal-close:hover { color: var(--text); }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 12px; font-weight: 500;
+    color: var(--muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .6px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text);
+    padding: 9px 12px; font-size: 13.5px;
+    font-family: var(--sans); outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--indigo); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  /* ── Filter page ── */
+  .filter-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px; margin-bottom: 18px;
+  }
+  .filter-card h3 {
+    font-size: 14px; font-weight: 600; margin-bottom: 14px;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .7px; font-size: 11px;
+  }
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-row .form-group { margin-bottom: 0; flex: 1; min-width: 140px; }
+  .results-label {
+    font-size: 12px; color: var(--muted); margin-bottom: 10px;
+    font-family: var(--mono);
+  }
+  .results-label strong { color: var(--indigo); }
+
+  /* ── Toast ── */
+  .toast-stack {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 500;
+  }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 18px;
+    font-size: 13px; color: var(--text);
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    animation: toastIn .3s ease;
+    display: flex; align-items: center; gap: 10px;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .toast.success .toast-dot { background: var(--emerald); }
+  .toast.error   .toast-dot { background: var(--rose); }
+  .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Loading ── */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px; color: var(--muted); gap: 12px;
+    font-size: 14px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--indigo);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    .dash-grid { grid-template-columns: 1fr 1fr; }
+    .ring-section { flex-direction: column; }
+  }
+  @media (max-width: 600px) {
+    .sidebar { width: 0; overflow: hidden; }
+    .main { margin-left: 0; }
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">PP</div>
+    <div class="logo-text">Place<span>Prep</span></div>
+  </div>
+  <nav>
+    <div class="nav-section-label">Overview</div>
+    <button class="nav-item active" onclick="goPage('dashboard')">
+      <div class="ni-dot"></div> Dashboard
+    </button>
+    <div class="nav-section-label" style="margin-top:10px">Topics</div>
+    <button class="nav-item" onclick="goPage('topics')">
+      <div class="ni-dot"></div> All Topics
+    </button>
+    <button class="nav-item" onclick="goPage('add')">
+      <div class="ni-dot"></div> Add Topic
+    </button>
+    <div class="nav-section-label" style="margin-top:10px">Explore</div>
+    <button class="nav-item" onclick="goPage('filter')">
+      <div class="ni-dot"></div> Filter & Search
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    API: <strong>localhost:8081</strong>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard <span>Overview</span></div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↺ Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="goPage('add')">+ Add Topic</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard Page -->
+    <div class="page active" id="page-dashboard">
+      <div id="dash-loading" class="loading"><div class="spinner"></div> Loading dashboard…</div>
+      <div id="dash-content" style="display:none">
+        <div class="dash-grid">
+          <div class="stat-card total">
+            <div class="stat-label">Total Topics</div>
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-sub">tracked in system</div>
+          </div>
+          <div class="stat-card done">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value" id="stat-completed">—</div>
+            <div class="stat-sub">fully studied</div>
+          </div>
+          <div class="stat-card going">
+            <div class="stat-label">On-going</div>
+            <div class="stat-value" id="stat-ongoing">—</div>
+            <div class="stat-sub">in progress</div>
+          </div>
+          <div class="stat-card notyet">
+            <div class="stat-label">Not Started</div>
+            <div class="stat-value" id="stat-notstarted">—</div>
+            <div class="stat-sub">yet to begin</div>
+          </div>
+          <div class="stat-card dsa">
+            <div class="stat-label">DSA Topics</div>
+            <div class="stat-value" id="stat-dsa">—</div>
+            <div class="stat-sub">data structures & algos</div>
+          </div>
+        </div>
+
+        <div class="ring-section">
+          <div class="ring-wrap">
+            <svg class="progress-ring" width="140" height="140" viewBox="0 0 140 140">
+              <circle class="ring-bg" cx="70" cy="70" r="56" stroke-width="10"/>
+              <circle class="ring-fg" id="ring-fg" cx="70" cy="70" r="56"
+                stroke-width="10"
+                stroke-dasharray="351.86"
+                stroke-dashoffset="351.86"/>
+            </svg>
+            <div class="ring-label">
+              <div class="ring-pct" id="ring-pct">0%</div>
+              <div class="ring-sub-text">complete</div>
+            </div>
+          </div>
+          <div class="ring-info">
+            <h2>Your Placement Progress</h2>
+            <p>Keep pushing — consistent preparation beats last-minute cramming every time. Track your hours and tick off each topic to build momentum.</p>
+            <div class="progress-bar-row">
+              <span class="prog-label" style="color:var(--emerald)">Done</span>
+              <div class="prog-bar"><div class="prog-fill" id="pb-done" style="width:0%;background:var(--emerald)"></div></div>
+              <span class="prog-count" id="pb-done-n" style="color:var(--emerald)">0</span>
+            </div>
+            <div class="progress-bar-row">
+              <span class="prog-label" style="color:var(--amber)">Going</span>
+              <div class="prog-bar"><div class="prog-fill" id="pb-going" style="width:0%;background:var(--amber)"></div></div>
+              <span class="prog-count" id="pb-going-n" style="color:var(--amber)">0</span>
+            </div>
+            <div class="progress-bar-row">
+              <span class="prog-label" style="color:var(--rose)">Pending</span>
+              <div class="prog-bar"><div class="prog-fill" id="pb-pend" style="width:0%;background:var(--rose)"></div></div>
+              <span class="prog-count" id="pb-pend-n" style="color:var(--rose)">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Topics Page -->
+    <div class="page" id="page-topics">
+      <div class="table-controls">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="topic-search" placeholder="Search topics…" oninput="renderTopics()">
+        </div>
+        <select class="filter-sel" id="status-filter" onchange="renderTopics()">
+          <option value="">All Statuses</option>
+          <option value="Completed">Completed</option>
+          <option value="on-going">On-going</option>
+          <option value="Not started">Not Started</option>
+        </select>
+        <select class="filter-sel" id="cat-filter" onchange="renderTopics()">
+          <option value="">All Categories</option>
+          <option value="DSA">DSA</option>
+          <option value="OS">OS</option>
+          <option value="CN">CN</option>
+          <option value="DBMS">DBMS</option>
+        </select>
+      </div>
+      <div id="topics-loading" class="loading"><div class="spinner"></div> Loading topics…</div>
+      <div class="table-wrap" id="topics-table-wrap" style="display:none">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Hours Spent</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="topics-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add / Edit modal trigger page -->
+    <div class="page" id="page-add">
+      <div class="filter-card" style="max-width:500px">
+        <h3>New Topic</h3>
+        <div class="form-group">
+          <label>Topic Name</label>
+          <input type="text" id="add-name" placeholder="e.g. Binary Search Trees">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="add-cat">
+              <option>DSA</option><option>OS</option>
+              <option>CN</option><option>DBMS</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="add-status">
+              <option value="Not started">Not Started</option>
+              <option value="on-going">On-going</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Hours Spent</label>
+          <input type="number" id="add-hours" placeholder="0" min="0">
+        </div>
+        <button class="btn btn-primary" onclick="addTopic()" style="width:100%;padding:10px">
+          Add Topic →
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Page -->
+    <div class="page" id="page-filter">
+      <div class="filter-card">
+        <h3>Filter by Status + Min Hours</h3>
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="f-status">
+              <option value="Completed">Completed</option>
+              <option value="on-going">On-going</option>
+              <option value="Not started">Not Started</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Min Hours Spent</label>
+            <input type="number" id="f-hours" placeholder="e.g. 3" min="0">
+          </div>
+          <div class="form-group" style="flex:0">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="filterByStatusHours()">Search</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-card">
+        <h3>Filter by Category + Hour Range</h3>
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="f-cat2">
+              <option>DSA</option><option>OS</option><option>CN</option><option>DBMS</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Min Hours</label>
+            <input type="number" id="f-min" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Max Hours</label>
+            <input type="number" id="f-max" placeholder="20" min="0">
+          </div>
+          <div class="form-group" style="flex:0">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="filterByCatHours()">Search</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="filter-results-wrap" style="display:none">
+        <div class="results-label">Showing <strong id="filter-count">0</strong> results</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Category</th><th>Status</th><th>Hours</th></tr></thead>
+            <tbody id="filter-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-backdrop" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">
+      Edit Topic
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <input type="hidden" id="edit-id">
+    <div class="form-group">
+      <label>Topic Name</label>
+      <input type="text" id="edit-name">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Category</label>
+        <select id="edit-cat">
+          <option>DSA</option><option>OS</option>
+          <option>CN</option><option>DBMS</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="edit-status">
+          <option value="Not started">Not Started</option>
+          <option value="on-going">On-going</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Hours Spent</label>
+      <input type="number" id="edit-hours" min="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTopic()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast stack -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+const API = 'http://localhost:8081';
+let allTopics = [];
+let maxHoursGlobal = 1;
+
+// ── Navigation ──
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    if (btn.textContent.toLowerCase().includes(name === 'dashboard' ? 'dash'
+        : name === 'topics' ? 'all' : name === 'add' ? 'add' : 'filter'))
+      btn.classList.add('active');
+  });
+  const titles = {
+    dashboard: 'Dashboard <span>Overview</span>',
+    topics: 'All <span>Topics</span>',
+    add: 'Add <span>Topic</span>',
+    filter: 'Filter <span>& Search</span>'
+  };
+  document.getElementById('page-title').innerHTML = titles[name] || name;
+
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'topics') loadTopics();
+}
+
+// ── Dashboard ──
+async function loadDashboard() {
+  document.getElementById('dash-loading').style.display = 'flex';
+  document.getElementById('dash-content').style.display = 'none';
+  try {
+    const [stats, dash] = await Promise.all([
+      fetch(`${API}/dashboard/stats`).then(r => r.json()),
+      fetch(`${API}/dashboard`).then(r => r.json())
+    ]);
+
+    document.getElementById('stat-total').textContent = stats.total;
+    document.getElementById('stat-completed').textContent = stats.completed;
+    document.getElementById('stat-ongoing').textContent = stats.ongoing;
+    document.getElementById('stat-notstarted').textContent = stats.notstarted;
+    document.getElementById('stat-dsa').textContent = dash.dsaTopics;
+
+    const pct = Math.round(dash.completedPercentage || 0);
+    document.getElementById('ring-pct').textContent = pct + '%';
+
+    // Ring animation
+    const circumference = 2 * Math.PI * 56;
+    const offset = circumference - (pct / 100) * circumference;
+    setTimeout(() => {
+      document.getElementById('ring-fg').style.strokeDashoffset = offset;
+    }, 100);
+
+    // Bars
+    const total = stats.total || 1;
+    const setPB = (id, nid, val, tot) => {
+      document.getElementById(id).style.width = Math.round((val/tot)*100) + '%';
+      document.getElementById(nid).textContent = val;
+    };
+    setPB('pb-done', 'pb-done-n', stats.completed, total);
+    setPB('pb-going', 'pb-going-n', stats.ongoing, total);
+    setPB('pb-pend', 'pb-pend-n', stats.notstarted, total);
+
+    document.getElementById('dash-loading').style.display = 'none';
+    document.getElementById('dash-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('dash-loading').innerHTML = '<span style="color:var(--rose)">⚠ Could not connect to backend at ' + API + '</span>';
+  }
+}
+
+// ── Topics ──
+async function loadTopics() {
+  document.getElementById('topics-loading').style.display = 'flex';
+  document.getElementById('topics-table-wrap').style.display = 'none';
+  try {
+    allTopics = await fetch(`${API}/topics`).then(r => r.json());
+    maxHoursGlobal = Math.max(...allTopics.map(t => t.hoursSpent), 1);
+    renderTopics();
+    document.getElementById('topics-loading').style.display = 'none';
+    document.getElementById('topics-table-wrap').style.display = 'block';
+  } catch(e) {
+    document.getElementById('topics-loading').innerHTML = '<span style="color:var(--rose)">⚠ Backend unreachable</span>';
+  }
+}
+
+function renderTopics() {
+  const q = document.getElementById('topic-search').value.toLowerCase();
+  const sf = document.getElementById('status-filter').value;
+  const cf = document.getElementById('cat-filter').value;
+
+  let list = allTopics.filter(t => {
+    const matchQ = !q || t.name.toLowerCase().includes(q) || t.category.toLowerCase().includes(q);
+    const matchS = !sf || t.status === sf;
+    const matchC = !cf || t.category === cf;
+    return matchQ && matchS && matchC;
+  });
+
+  const tbody = document.getElementById('topics-tbody');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No topics match your filters.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map((t, i) => `
+    <tr>
+      <td style="font-weight:500">${t.name}</td>
+      <td><span class="badge ${catBadge(t.category)}">${t.category}</span></td>
+      <td><span class="badge ${statusBadge(t.status)}">${t.status}</span></td>
+      <td>
+        <div class="hours-bar">
+          <div class="hours-track">
+            <div class="hours-fill" style="width:${Math.min(100, (t.hoursSpent/maxHoursGlobal)*100)}%"></div>
+          </div>
+          <span class="hours-num">${t.hoursSpent}h</span>
+        </div>
+      </td>
+      <td>
+        <div class="action-btns">
+          <button class="btn btn-ghost btn-sm" onclick="openEdit(${JSON.stringify(t).replace(/"/g,'&quot;')})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTopic(${t.id || 0}, '${t.name}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function catBadge(c) {
+  const m = { DSA:'badge-dsa', OS:'badge-os', CN:'badge-cn', DBMS:'badge-dbms' };
+  return m[c] || 'badge-other';
+}
+function statusBadge(s) {
+  if (s === 'Completed') return 'badge-completed';
+  if (s === 'on-going')  return 'badge-ongoing';
+  return 'badge-notstarted';
+}
+
+function renderFilterTable(list) {
+  document.getElementById('filter-results-wrap').style.display = 'block';
+  document.getElementById('filter-count').textContent = list.length;
+  const tbody = document.getElementById('filter-tbody');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No results found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(t => `
+    <tr>
+      <td style="font-weight:500">${t.name}</td>
+      <td><span class="badge ${catBadge(t.category)}">${t.category}</span></td>
+      <td><span class="badge ${statusBadge(t.status)}">${t.status}</span></td>
+      <td><span style="font-family:var(--mono);font-size:13px;color:var(--muted)">${t.hoursSpent}h</span></td>
+    </tr>
+  `).join('');
+}
+
+// ── CRUD ──
+async function addTopic() {
+  const name     = document.getElementById('add-name').value.trim();
+  const category = document.getElementById('add-cat').value;
+  const status   = document.getElementById('add-status').value;
+  const hoursSpent = parseInt(document.getElementById('add-hours').value) || 0;
+
+  if (!name) { toast('Topic name is required', 'error'); return; }
+
+  try {
+    const res = await fetch(`${API}/topics`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, category, status, hoursSpent })
+    });
+    if (res.ok) {
+      toast('Topic added successfully', 'success');
+      document.getElementById('add-name').value = '';
+      document.getElementById('add-hours').value = '';
+    } else {
+      const err = await res.json();
+      toast(Object.values(err).join(', '), 'error');
+    }
+  } catch(e) { toast('Backend unreachable', 'error'); }
+}
+
+function openEdit(t) {
+  document.getElementById('edit-id').value = t.id || '';
+  document.getElementById('edit-name').value = t.name;
+  document.getElementById('edit-cat').value = t.category;
+  document.getElementById('edit-status').value = t.status;
+  document.getElementById('edit-hours').value = t.hoursSpent;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+
+async function saveTopic() {
+  const id = document.getElementById('edit-id').value;
+  const body = {
+    name: document.getElementById('edit-name').value,
+    category: document.getElementById('edit-cat').value,
+    status: document.getElementById('edit-status').value,
+    hoursSpent: parseInt(document.getElementById('edit-hours').value) || 0
+  };
+  try {
+    const res = await fetch(`${API}/topics/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      closeModal(); toast('Topic updated', 'success'); loadTopics();
+    } else { toast('Update failed', 'error'); }
+  } catch(e) { toast('Backend unreachable', 'error'); }
+}
+
+async function deleteTopic(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  try {
+    await fetch(`${API}/topics/${id}`, { method: 'DELETE' });
+    toast('Topic deleted', 'success'); loadTopics();
+  } catch(e) { toast('Backend unreachable', 'error'); }
+}
+
+// ── Filters ──
+async function filterByStatusHours() {
+  const status = document.getElementById('f-status').value;
+  const hours  = document.getElementById('f-hours').value || 0;
+  try {
+    const list = await fetch(`${API}/topics/status/${encodeURIComponent(status)}/HoursSpent/${hours}`).then(r => r.json());
+    renderFilterTable(list);
+  } catch(e) { toast('Backend unreachable', 'error'); }
+}
+async function filterByCatHours() {
+  const cat = document.getElementById('f-cat2').value;
+  const min = document.getElementById('f-min').value || 0;
+  const max = document.getElementById('f-max').value || 9999;
+  try {
+    const list = await fetch(`${API}/topics/category/${encodeURIComponent(cat)}/${min}/${max}`).then(r => r.json());
+    renderFilterTable(list);
+  } catch(e) { toast('Backend unreachable', 'error'); }
+}
+
+// ── Utilities ──
+function refreshAll() {
+  const active = document.querySelector('.page.active')?.id?.replace('page-','');
+  if (active === 'dashboard') loadDashboard();
+  if (active === 'topics') loadTopics();
+  toast('Refreshed', 'success');
+}
+
+function toast(msg, type = 'success') {
+  const stack = document.getElementById('toast-stack');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-dot"></div>${msg}`;
+  stack.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// Close modal on backdrop click
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Init
+loadDashboard();
+</script>
+</body>
+</html>

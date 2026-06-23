@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+
+<style>
+body {
+    font-family: system-ui;
+    background: #f4f6fb;
+    margin: 0;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: #111827;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(2, 200px);
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.card p {
+    font-size: 26px;
+    font-weight: bold;
+    color: #111827;
+}
+
+.total { border-top: 4px solid #6366f1; }
+.completed { border-top: 4px solid #16a34a; }
+.ongoing { border-top: 4px solid #f59e0b; }
+.notstarted { border-top: 4px solid #ef4444; }
+
+a {
+    margin-top: 30px;
+    text-decoration: none;
+    background: #111827;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📊 Placement Dashboard</h1>
+
+<div class="container">
+
+    <div class="card total">
+        <h2>Total Topics</h2>
+        <p id="total">0</p>
+    </div>
+
+    <div class="card completed">
+        <h2>Completed</h2>
+        <p id="completed">0</p>
+    </div>
+
+    <div class="card ongoing">
+        <h2>On-Going</h2>
+        <p id="ongoing">0</p>
+    </div>
+
+    <div class="card notstarted">
+        <h2>Not Started</h2>
+        <p id="notStarted">0</p>
+    </div>
+
+    <div class="card category-card" onclick="window.location.href='category.html'">
+    <h2>Categories</h2>
+    <p>Browse Topics →</p>
+    </div>
+
+</div>
+
+<a href="index.html">Go to Topics →</a>
+
+<script>
+fetch("http://localhost:8080/dashboard/stats")
+.then(res => res.json())
+.then(data => {
+    document.getElementById("total").innerText = data.total;
+    document.getElementById("completed").innerText = data.completed;
+    document.getElementById("ongoing").innerText = data.ongoing;
+    document.getElementById("notStarted").innerText = data.notstarted;
+});
+</script>
+
+</body>
+</html>
