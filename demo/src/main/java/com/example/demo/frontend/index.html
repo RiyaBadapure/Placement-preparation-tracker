@@ -898,28 +898,6 @@
 <div class="toast-stack" id="toast-stack"></div>
 
 <script>
-/* ══════════════════════════════════════════
-   IMPORTANT FIX NOTES vs original frontend:
-   1. API base changed from :8081 → :8080
-   2. Removed /dashboard/stats — only /dashboard exists
-   3. Status values: "On-Going" (not "on-going"), "Not started", "Completed"
-   4. TopicDTO has no id → we fetch full topics from GET /topics/{id} chain
-      and keep an id map internally (see allTopics cache with id field)
-   5. Added PUT /goal wiring on Goal page
-   6. Filter endpoint URLs matched exactly to controller:
-      - /topics/status/{status}/HoursSpent/{hours}
-      - /topics/category/{cat}/{min}/{max}
-      - /topics/hours-less-than/{n}
-      - /topics/category/{cat}/hours-desc
-   7. NEW: JWT auth wired against /auth/login (+/auth/register).
-      - UserDTO uses getUserName()/setUserName() so the JSON field is
-        "userName" (capital N), NOT "username" — matched exactly below.
-      - /auth/login returns a raw string token (not JSON) — read via .text()
-      - Token is kept in memory only (no localStorage — this preview
-        sandbox doesn't support it). If you host this file yourself,
-        swap the two TODOs below to persist the token in localStorage
-        so refresh doesn't log you out.
-══════════════════════════════════════════ */
 
 const API = 'http://localhost:8080';
 
