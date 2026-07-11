@@ -49,7 +49,7 @@ if (path.startsWith("/h2-console")
 
     filterChain.doFilter(request, response);
     return;
-}
+};
         String authHeader=request.getHeader("Authorization");
 
         if(authHeader!=null && authHeader.startsWith("Bearer "))

@@ -87,9 +87,24 @@
     padding: 14px 18px;
     border-top: 1px solid var(--border);
     font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
 
   .sidebar-footer strong { color: var(--indigo); font-family: var(--mono); font-size: 11px; }
+
+  .user-chip { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .user-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--indigo); color: #fff; font-family: var(--mono);
+    font-size: 11px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 500; }
+  .logout-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 12px; padding: 4px 6px; border-radius: 4px; flex-shrink: 0;
+  }
+  .logout-btn:hover { color: var(--rose); background: rgba(244,63,94,.1); }
 
   /* ── Main ── */
   .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
@@ -364,6 +379,40 @@
   }
   .callout-icon { color: var(--indigo); flex-shrink: 0; font-size: 15px; }
 
+  /* ── Auth screen ── */
+  .auth-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .auth-card {
+    width: 380px; max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+  }
+  .auth-logo { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 22px; }
+  .auth-logo .logo-icon { width: 38px; height: 38px; font-size: 16px; }
+  .auth-logo .logo-text { font-size: 19px; }
+  .auth-tabs { display: flex; background: var(--surface2); border-radius: 8px; padding: 3px; margin-bottom: 22px; }
+  .auth-tab {
+    flex: 1; text-align: center; padding: 8px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer;
+    background: none; border: none; transition: all .15s;
+  }
+  .auth-tab.active { background: var(--indigo); color: #fff; }
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+  .auth-error {
+    background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.25);
+    color: var(--rose); font-size: 12.5px; padding: 9px 12px; border-radius: 6px;
+    margin-bottom: 14px; display: none;
+  }
+  .auth-error.show { display: block; }
+  .auth-sub { font-size: 12.5px; color: var(--muted); text-align: center; margin-bottom: 22px; }
+
   @media (max-width: 900px) {
     .dash-grid { grid-template-columns: repeat(2,1fr); }
     .ring-section { flex-direction: column; }
@@ -377,6 +426,57 @@
 </style>
 </head>
 <body>
+
+<!-- ===========================
+     AUTH SCREEN (Login / Signup)
+=========================== -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">PP</div>
+      <div class="logo-text">Place<span>Prep</span></div>
+    </div>
+    <div class="auth-sub">Track your placement prep. Sign in to continue.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Log In</button>
+      <button class="auth-tab" id="tab-signup-btn" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <!-- Login form -->
+    <div class="auth-form active" id="form-login">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="e.g. rahul_dev" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-block" id="login-submit-btn" onclick="submitLogin()">Log In</button>
+    </div>
+
+    <!-- Signup form -->
+    <div class="auth-form" id="form-signup">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="signup-username" placeholder="Choose a username" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Choose a password" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary btn-block" id="signup-submit-btn" onclick="submitSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     APP SHELL
+=========================== -->
+<div id="app-shell" style="display:none">
 
 <!-- Sidebar -->
 <aside class="sidebar">
@@ -409,7 +509,11 @@
   </nav>
 
   <div class="sidebar-footer">
-    Connected to <strong>localhost:8080</strong>
+    <div class="user-chip">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div class="user-name" id="user-name">—</div>
+    </div>
+    <button class="logout-btn" onclick="logout()" title="Log out">⏻</button>
   </div>
 </aside>
 
@@ -735,6 +839,8 @@
   </div><!-- /content -->
 </div><!-- /main -->
 
+</div><!-- /app-shell -->
+
 <!-- ── Add / Edit Modal ── -->
 <div class="modal-backdrop" id="topic-modal">
   <div class="modal">
@@ -805,15 +911,148 @@
       - /topics/category/{cat}/{min}/{max}
       - /topics/hours-less-than/{n}
       - /topics/category/{cat}/hours-desc
+   7. NEW: JWT auth wired against /auth/login (+/auth/register).
+      - UserDTO uses getUserName()/setUserName() so the JSON field is
+        "userName" (capital N), NOT "username" — matched exactly below.
+      - /auth/login returns a raw string token (not JSON) — read via .text()
+      - Token is kept in memory only (no localStorage — this preview
+        sandbox doesn't support it). If you host this file yourself,
+        swap the two TODOs below to persist the token in localStorage
+        so refresh doesn't log you out.
 ══════════════════════════════════════════ */
 
 const API = 'http://localhost:8080';
+
+let authToken = null;      // TODO: swap for localStorage.getItem('ppToken') if self-hosting
+let currentUser = null;    // TODO: swap for localStorage.getItem('ppUser') if self-hosting
 
 /* allTopics stores the raw response — 
    NOTE: TopicDTO does not include id, so we pair it with index.
    You should add id to TopicDTO for proper edit/delete — see note below. */
 let allTopics = [];
 let maxHours = 1;
+
+// ─── Auth ───────────────────────────────────
+function switchAuthTab(tab) {
+  document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
+  document.getElementById('form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('form-signup').classList.toggle('active', tab === 'signup');
+  hideAuthError();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideAuthError() {
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+function setAuthBusy(btnId, busy, idleText) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Please wait…' : idleText;
+}
+
+async function submitLogin() {
+  hideAuthError();
+  const userName = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!userName || !password) { showAuthError('Enter both username and password.'); return; }
+
+  setAuthBusy('login-submit-btn', true, 'Log In');
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, password })
+    });
+
+    if (!res.ok) {
+      let msg = 'Invalid username or password';
+      try { const e = await res.json(); msg = e.message || JSON.stringify(e); } catch(_) {}
+      showAuthError(msg);
+      return;
+    }
+
+    // /auth/login returns the JWT as a raw string, not JSON
+    const token = (await res.text()).replace(/^"|"$/g, '');
+    authToken = token;
+    currentUser = userName;
+
+    toast(`Welcome back, ${userName} ✓`, 'success');
+    enterApp();
+  } catch (e) {
+    showAuthError(`Cannot connect to ${API}. Is Spring Boot running?`);
+  } finally {
+    setAuthBusy('login-submit-btn', false, 'Log In');
+  }
+}
+
+async function submitSignup() {
+  hideAuthError();
+  const userName = document.getElementById('signup-username').value.trim();
+  const password = document.getElementById('signup-password').value;
+
+  if (!userName || !password) { showAuthError('Enter both username and password.'); return; }
+  if (password.length < 4) { showAuthError('Password should be at least 4 characters.'); return; }
+
+  setAuthBusy('signup-submit-btn', true, 'Create Account');
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, password })
+    });
+
+    if (!res.ok) {
+      let msg = 'Could not create account';
+      try { const e = await res.json(); msg = e.message || JSON.stringify(e); } catch(_) {}
+      showAuthError(msg);
+      return;
+    }
+
+    toast('Account created — please log in ✓', 'success');
+    // Pre-fill and jump to the login tab
+    document.getElementById('login-username').value = userName;
+    document.getElementById('login-password').value = '';
+    switchAuthTab('login');
+  } catch (e) {
+    showAuthError(`Cannot connect to ${API}. Is Spring Boot running?`);
+  } finally {
+    setAuthBusy('signup-submit-btn', false, 'Create Account');
+  }
+}
+
+function enterApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = '';
+
+  document.getElementById('user-name').textContent = currentUser || '—';
+  document.getElementById('user-avatar').textContent = (currentUser || '?').charAt(0).toUpperCase();
+
+  goPage('dashboard');
+}
+
+function logout() {
+  authToken = null;
+  currentUser = null;
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  switchAuthTab('login');
+}
+
+/** Handles a 401/403 from any authenticated call by bouncing back to login. */
+function handleAuthFailure() {
+  toast('Session expired — please log in again', 'error');
+  logout();
+}
 
 // ─── Navigation ─────────────────────────────
 const pageTitles = {
@@ -858,6 +1097,7 @@ async function loadDashboard() {
 
   try {
     const d = await get('/dashboard');
+    if (d === null) return; // auth failure already handled
 
     // Stat cards
     set('d-total',     d.totalTopics);
@@ -900,7 +1140,9 @@ async function loadTopics() {
   show('topics-loading'); hide('topics-table-wrap');
 
   try {
-    allTopics = await get('/topics');
+    const data = await get('/topics');
+    if (data === null) return; // auth failure already handled
+    allTopics = data;
     maxHours  = Math.max(...allTopics.map(t => t.hoursSpent ?? 0), 1);
     renderTopics();
     hide('topics-loading'); show('topics-table-wrap');
@@ -989,25 +1231,17 @@ async function submitModal() {
   if (!body.name) { toast('Topic name is required', 'error'); return; }
 
   try {
+    let res;
     if (id) {
       // FIX: PUT /topics/{id}  (not /topics/id — correct path)
-      const res = await fetch(`${API}/topics/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) { const e = await res.json(); toast(JSON.stringify(e), 'error'); return; }
-      toast('Topic updated ✓', 'success');
+      res = await authedFetch(`/topics/${id}`, { method: 'PUT', body: JSON.stringify(body) });
     } else {
-      // POST /topics
-      const res = await fetch(`${API}/topics`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) { const e = await res.json(); toast(JSON.stringify(e), 'error'); return; }
-      toast('Topic added ✓', 'success');
+      res = await authedFetch(`/topics`, { method: 'POST', body: JSON.stringify(body) });
     }
+    if (!res) return; // auth failure already handled
+
+    if (!res.ok) { const e = await res.json(); toast(JSON.stringify(e), 'error'); return; }
+    toast(id ? 'Topic updated ✓' : 'Topic added ✓', 'success');
     closeModal();
     loadTopics();
   } catch(e) {
@@ -1019,7 +1253,8 @@ async function deleteTopic(id, name) {
   if (!id) { toast('No ID — add id to TopicDTO to enable delete', 'error'); return; }
   if (!confirm(`Delete "${name}"?`)) return;
   try {
-    await fetch(`${API}/topics/${id}`, { method: 'DELETE' });
+    const res = await authedFetch(`/topics/${id}`, { method: 'DELETE' });
+    if (!res) return; // auth failure already handled
     toast('Topic deleted', 'success');
     loadTopics();
   } catch(e) { toast('Backend unreachable', 'error'); }
@@ -1033,6 +1268,7 @@ async function runFilter1() {
   const status = document.getElementById('f1-status').value;
   const hours  = parseInt(document.getElementById('f1-hours').value) || 0;
   const data   = await get(`/topics/status/${encodeURIComponent(status)}/HoursSpent/${hours}`);
+  if (data === null) return;
   showFilterResults(data);
 }
 
@@ -1042,6 +1278,7 @@ async function runFilter2() {
   const min = parseInt(document.getElementById('f2-min').value) || 0;
   const max = parseInt(document.getElementById('f2-max').value) || 9999;
   const data = await get(`/topics/category/${encodeURIComponent(cat)}/${min}/${max}`);
+  if (data === null) return;
   showFilterResults(data);
 }
 
@@ -1049,6 +1286,7 @@ async function runFilter3() {
   // GET /topics/hours-less-than/{hoursSpent}
   const hours = parseInt(document.getElementById('f3-hours').value) || 5;
   const data  = await get(`/topics/hours-less-than/${hours}`);
+  if (data === null) return;
   showFilterResults(data);
 }
 
@@ -1056,6 +1294,7 @@ async function runFilter4() {
   // GET /topics/category/{category}/hours-desc
   const cat  = document.getElementById('f4-cat').value;
   const data = await get(`/topics/category/${encodeURIComponent(cat)}/hours-desc`);
+  if (data === null) return;
   showFilterResults(data);
 }
 
@@ -1085,6 +1324,7 @@ async function loadGoal() {
   show('goal-loading'); hide('goal-content');
   try {
     const d = await get('/dashboard');
+    if (d === null) return; // auth failure already handled
     set('g-spent',  d.totalHoursSpent ?? 0);
     set('g-target', d.targetHours ?? 0);
     set('g-pct',    (d.goalPercentage?.toFixed(1) ?? 0) + '% complete');
@@ -1102,11 +1342,8 @@ async function updateGoal() {
   const val = parseInt(document.getElementById('goal-input').value);
   if (!val || val < 1) { toast('Enter a valid target hours value', 'error'); return; }
   try {
-    const res = await fetch(`${API}/goal`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetHours: val })
-    });
+    const res = await authedFetch(`/goal`, { method: 'PUT', body: JSON.stringify({ targetHours: val }) });
+    if (!res) return; // auth failure already handled
     if (res.ok) {
       toast('Goal updated ✓', 'success');
       document.getElementById('goal-input').value = '';
@@ -1130,8 +1367,29 @@ function catBadge(c) {
   return m[c?.toUpperCase()] ?? 'b-other';
 }
 
-// ─── Tiny DOM helpers ─────────────────────────
-function get(path)    { return fetch(API + path).then(r => { if (!r.ok) throw r; return r.json(); }); }
+// ─── Tiny DOM / API helpers ───────────────────
+/** GET wrapper that attaches the Authorization header and handles 401/403. */
+async function get(path) {
+  const res = await fetch(API + path, {
+    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+  });
+  if (res.status === 401 || res.status === 403) { handleAuthFailure(); return null; }
+  if (!res.ok) throw res;
+  return res.json();
+}
+
+/** fetch wrapper for POST/PUT/DELETE that attaches auth + JSON content-type, and handles 401/403. */
+async function authedFetch(path, opts = {}) {
+  const headers = Object.assign(
+    { 'Content-Type': 'application/json' },
+    authToken ? { 'Authorization': `Bearer ${authToken}` } : {},
+    opts.headers || {}
+  );
+  const res = await fetch(API + path, { ...opts, headers });
+  if (res.status === 401 || res.status === 403) { handleAuthFailure(); return null; }
+  return res;
+}
+
 function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; }
 function show(id)     { const el = document.getElementById(id); if (el) el.style.display = ''; }
 function hide(id)     { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
@@ -1158,8 +1416,12 @@ document.getElementById('topic-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
+// ─── Enter key submits auth forms ─────────────
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });
+document.getElementById('signup-password').addEventListener('keydown', e => { if (e.key === 'Enter') submitSignup(); });
+
 // ─── Init ─────────────────────────────────────
-loadDashboard();
+// App only loads data once logged in (see enterApp()); auth screen shows by default.
 </script>
 
 </body>
