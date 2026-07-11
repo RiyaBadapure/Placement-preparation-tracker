@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 import java.util.List;
 
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.DashboardDTO;
+import com.example.demo.dto.GoalDTO;
 import com.example.demo.dto.TopicDTO;
 import com.example.demo.service.TopicService;
 
@@ -110,5 +112,12 @@ public class TopicController {
     public DashboardDTO getDashboard()
     {
         return service.getDashboard();
+    }
+
+
+    @PutMapping("/goal")
+    public String updateGoal(@RequestBody GoalDTO dto)
+    {
+        return service.updateGoal(dto);
     }
 }

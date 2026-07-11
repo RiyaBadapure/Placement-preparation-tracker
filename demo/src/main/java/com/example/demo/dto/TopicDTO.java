@@ -13,6 +13,7 @@ public class TopicDTO {
     @Min(value=0,message="Hours spent cannot be negative")
     private int hoursSpent;
 
+    
     public String getName()
     {
         return name;

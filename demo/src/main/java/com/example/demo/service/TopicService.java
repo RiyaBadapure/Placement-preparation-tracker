@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.DashboardDTO;
+import com.example.demo.dto.GoalDTO;
 import com.example.demo.dto.TopicDTO;
 import com.example.demo.entity.Topic;
 import com.example.demo.exception.TopicNotFoundException;
@@ -40,6 +41,7 @@ public class TopicService {
         dto.setCategory(topic.getCategory());
         dto.setStatus(topic.getStatus());
         dto.setHoursSpent(topic.getHoursSpent());
+        
 
         return dto;
     }
@@ -167,31 +169,65 @@ public class TopicService {
                          .toList();
     }
 
-    public DashboardDTO getDashboard()
-{
+    private long targetHours=200;
+
+    public String updateGoal(GoalDTO dto)
+    {
+        targetHours=dto.getTargetHours();
+        return "Goal updated successfully";
+    }
+
+    public DashboardDTO getDashboard() {
+
     DashboardDTO dto = new DashboardDTO();
 
     long totalTopics = repository.count();
     long completedTopics = repository.countByStatus("Completed");
 
-    dto.setTotalTopics(totalTopics);
+    Long totalHours = repository.getTotalHoursSpent();
 
-    dto.setCompletedTopics(completedTopics);
-
-    dto.setPendingTopics(
-        repository.countByStatus("Pending")
+    dto.setTargetHours(targetHours);
+    dto.setRemainingHours(
+        Math.max(targetHours-totalHours,0)
     );
 
-    dto.setDsaTopics(
-        repository.countByCategory("DSA")
+    double goalPercentage= targetHours==0 ? 0 :(totalHours*100.0)/targetHours;
+
+    dto.setGoalPercentage(goalPercentage);
+
+    long safeTotalHours = (totalHours == null) ? 0L : totalHours;
+
+    Topic topTopic = repository.findTopByOrderByHoursSpentDesc()
+                                .orElse(null);
+
+    
+
+    dto.setTotalTopics(totalTopics);
+    dto.setCompletedTopics(completedTopics);
+
+    dto.setPendingTopics(repository.countByStatus("Pending"));
+    dto.setDsaTopics(repository.countByCategory("DSA"));
+    dto.setJavaTopics(repository.countByCategory("JAVA"));
+    dto.setOopsTopics(repository.countByCategory("OOPS"));
+    dto.setOngoingTopics(repository.countByStatus("On-going"));
+
+    dto.setTotalHoursSpent(safeTotalHours);
+
+    dto.setAverageHoursSpent(
+            totalTopics == 0 ? 0.0 : (double) safeTotalHours / totalTopics
+    );
+
+    dto.setMostTimeSpent(
+            (topTopic == null) ? "N/A" : topTopic.getName()
     );
 
     dto.setCompletedPercentage(
-        (completedTopics * 100.0) / totalTopics
+            totalTopics == 0 ? 0.0 : (completedTopics * 100.0) / totalTopics
     );
 
     return dto;
 }
 
+   
     
 }

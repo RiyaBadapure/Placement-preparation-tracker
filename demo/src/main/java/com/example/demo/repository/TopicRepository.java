@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,6 +22,7 @@ public interface TopicRepository extends JpaRepository<Topic, Integer>
     List<Topic> findByHoursSpentLessThan(int hoursSpent);
     List<Topic> findByCategoryContaining(String category);
     List<Topic> findByCategoryOrderByHoursSpentDesc(String category);
+    Optional<Topic> findTopByOrderByHoursSpentDesc();
 
     @Query(
         "select t from Topic t "+
@@ -37,9 +39,9 @@ public interface TopicRepository extends JpaRepository<Topic, Integer>
     List<Topic> findByTopicsByCategoryByHours(String category,int minHours,int maxHours);
 
     @Query(
-        "select sum(t.hoursSpent) from topic t"
+        "select coalesce (sum(t.hoursSpent),0) from Topic t"
     )
-    long getTotalHoursSpent();
+    Long getTotalHoursSpent();
 
     
 }

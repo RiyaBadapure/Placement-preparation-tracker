@@ -7,6 +7,16 @@ public class DashboardDTO {
     private long pendingTopics;
     private long dsaTopics;
     private double completedPercentage;
+    private long javaTopics;
+    private long oopsTopics;
+    private long totalHoursSpent;
+    private long ongoingTopics;
+    private double averageHoursSpent;
+    private String mostTimeSpent;
+    private long targetHours;
+    private long remainingHours;
+    private double goalPercentage;
+
 
     public long getTotalTopics()
     {
@@ -57,4 +67,95 @@ public class DashboardDTO {
     {
         this.completedPercentage=completedPercentage;
     }
+
+    public long getJavaTopics()
+    {
+        return javaTopics;
+    }
+
+    public void setJavaTopics(long javaTopics)
+    {
+        this.javaTopics=javaTopics;
+    }
+
+    public long getOopsTopics()
+    {
+        return oopsTopics;
+    }
+
+    public void setOopsTopics(long oopsTopics)
+    {
+        this.oopsTopics=oopsTopics;
+    }
+
+    public long getTotalHoursSpent()
+    {
+        return totalHoursSpent;
+    }
+
+    public void setTotalHoursSpent(long totalHoursSpent)
+    {
+        this.totalHoursSpent=totalHoursSpent;
+    }
+
+    public long getOngoingTopics()
+    {
+        return ongoingTopics;
+    }
+
+    public void setOngoingTopics(long ongoingTopics)
+    {
+        this.ongoingTopics=ongoingTopics;
+    }
+
+    public double getAverageHoursSpent()
+    {
+        return averageHoursSpent;
+    }
+
+    public void setAverageHoursSpent(double averageHoursSpent)
+    {
+        this.averageHoursSpent=averageHoursSpent;
+    }
+
+    public String getMostTimeSpent()
+    {
+        return mostTimeSpent;
+    }
+
+    public void setMostTimeSpent(String mostTimeSpent)
+    {
+        this.mostTimeSpent=mostTimeSpent;
+    }
+
+    public long getTargetHours()
+    {
+        return targetHours;
+    }
+
+    public void setTargetHours(long targetHours)
+    {
+        this.targetHours=targetHours;
+    }
+
+    public long getRemainingHours()
+    {
+        return remainingHours;
+    }
+
+    public void setRemainingHours(long remainingHours)
+    {
+        this.remainingHours=remainingHours;
+    }
+
+    public double getGoalPercentage()
+    {
+        return goalPercentage;
+    }
+
+    public void setGoalPercentage(double goalPercentage)
+    {
+        this.goalPercentage=goalPercentage;
+    }
+
 }
