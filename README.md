@@ -74,7 +74,7 @@ src/main/resources/
 
 
 
-The API starts on **`Available at your primary URL https://placement-preparation-tracker-6.onrender.com0`**.
+The API starts on **`https://placement-preparation-tracker-6.onrender.com`**.
 
 ### Open the frontend
 
