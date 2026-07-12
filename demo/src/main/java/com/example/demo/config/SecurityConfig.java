@@ -40,13 +40,16 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/register",
-                             "/auth/login",
-                             "/h2-console/**")
-            .permitAll()
-            .anyRequest()
-            .authenticated()
-        )
+        .requestMatchers(
+        "/",
+        "/**",
+        "/auth/**",
+        "/h2-console/**"
+    )
+    .permitAll()
+    .anyRequest()
+    .authenticated()
+)
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

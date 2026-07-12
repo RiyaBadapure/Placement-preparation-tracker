@@ -1,11 +1,1428 @@
-!DOCTYPE html
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlacePrep — Placement Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --surface2:  #1f2937;
+    --border:    #30363d;
+    --indigo:    #6366f1;
+    --emerald:   #10b981;
+    --amber:     #f59e0b;
+    --rose:      #f43f5e;
+    --sky:       #38bdf8;
+    --violet:    #a78bfa;
+    --text:      #e6edf3;
+    --muted:     #8b949e;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; height: 100vh;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--indigo);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 14px; color: #fff;
+  }
+
+  .logo-text { font-weight: 600; font-size: 15px; color: var(--text); letter-spacing: -.3px; }
+  .logo-text span { color: var(--indigo); }
+
+  nav { padding: 12px 10px; flex: 1; }
+
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 8px 10px 4px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 6px;
+    cursor: pointer; font-size: 13.5px; font-weight: 500;
+    color: var(--muted); transition: all .15s;
+    margin-bottom: 2px; border: none; background: none;
+    width: 100%; text-align: left;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(99,102,241,.15); color: var(--indigo); }
+  .nav-item .ni-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .6; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+
+  .sidebar-footer strong { color: var(--indigo); font-family: var(--mono); font-size: 11px; }
+
+  .user-chip { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .user-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--indigo); color: #fff; font-family: var(--mono);
+    font-size: 11px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 500; }
+  .logout-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 12px; padding: 4px 6px; border-radius: 4px; flex-shrink: 0;
+  }
+  .logout-btn:hover { color: var(--rose); background: rgba(244,63,94,.1); }
+
+  /* ── Main ── */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .topbar-title { font-size: 18px; font-weight: 600; }
+  .topbar-title span { color: var(--indigo); }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    padding: 7px 16px; border-radius: 6px; border: none;
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+  }
+
+  .btn-primary { background: var(--indigo); color: #fff; }
+  .btn-primary:hover { background: #818cf8; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-danger { background: rgba(244,63,94,.15); color: var(--rose); border: 1px solid rgba(244,63,94,.2); }
+  .btn-danger:hover { background: rgba(244,63,94,.25); }
+  .btn-success { background: rgba(16,185,129,.15); color: var(--emerald); border: 1px solid rgba(16,185,129,.2); }
+  .btn-success:hover { background: rgba(16,185,129,.25); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-block { width: 100%; padding: 10px; }
+
+  .content { padding: 28px; flex: 1; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Stat cards ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; height: 3px; width: 100%;
+  }
+
+  .stat-card.c-indigo::before { background: var(--indigo); }
+  .stat-card.c-green::before  { background: var(--emerald); }
+  .stat-card.c-amber::before  { background: var(--amber); }
+  .stat-card.c-rose::before   { background: var(--rose); }
+  .stat-card.c-sky::before    { background: var(--sky); }
+  .stat-card.c-violet::before { background: var(--violet); }
+
+  .stat-label { font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-family: var(--mono); font-size: 36px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+
+  .c-indigo .stat-value { color: var(--indigo); }
+  .c-green  .stat-value { color: var(--emerald); }
+  .c-amber  .stat-value { color: var(--amber); }
+  .c-rose   .stat-value { color: var(--rose); }
+  .c-sky    .stat-value { color: var(--sky); }
+  .c-violet .stat-value { color: var(--violet); }
+
+  .stat-sub { font-size: 12px; color: var(--muted); }
+
+  /* ── Progress section ── */
+  .ring-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .ring-wrap { position: relative; flex-shrink: 0; }
+  svg.progress-ring { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--surface2); }
+  .ring-fg { fill: none; stroke: var(--indigo); stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+  .ring-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .ring-pct { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--indigo); }
+  .ring-sub-text { font-size: 11px; color: var(--muted); }
+  .ring-info { flex: 1; min-width: 240px; }
+  .ring-info h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .ring-info p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+
+  .progress-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .prog-bar { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .prog-label { font-size: 11px; color: var(--muted); width: 64px; }
+  .prog-count { font-family: var(--mono); font-size: 12px; width: 24px; text-align: right; }
+
+  /* Goal card */
+  .goal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 24px;
+  }
+
+  .goal-card h3 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 14px; }
+
+  .goal-bar-wrap { height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; margin: 10px 0 6px; }
+  .goal-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--indigo), var(--violet)); transition: width 1s ease; }
+  .goal-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+  .goal-update-row { display: flex; gap: 8px; margin-top: 14px; align-items: flex-end; }
+  .goal-update-row input {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 8px 12px; font-size: 13px; font-family: var(--sans);
+    outline: none; width: 140px;
+  }
+  .goal-update-row input:focus { border-color: var(--indigo); }
+  .goal-update-row label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+
+  /* ── Table controls ── */
+  .table-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 8px 12px 8px 36px; font-size: 13.5px; font-family: var(--sans);
+    outline: none;
+  }
+  .search-wrap input:focus { border-color: var(--indigo); }
+  .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 15px; }
+
+  select.filter-sel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 8px 12px; font-size: 13px; font-family: var(--sans);
+    outline: none; cursor: pointer;
+  }
+  select.filter-sel:focus { border-color: var(--indigo); }
+
+  /* ── Table ── */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
+  th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); }
+  td { padding: 13px 16px; font-size: 13.5px; border-bottom: 1px solid rgba(48,54,61,.5); }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .1s; }
+  tbody tr:hover { background: rgba(255,255,255,.025); }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: .3px;
+    white-space: nowrap;
+  }
+
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  .b-completed  { background: rgba(16,185,129,.15); color: var(--emerald); }
+  .b-ongoing    { background: rgba(245,158,11,.15);  color: var(--amber); }
+  .b-notstarted { background: rgba(244,63,94,.15);   color: var(--rose); }
+
+  .b-dsa   { background: rgba(56,189,248,.12);  color: var(--sky); }
+  .b-os    { background: rgba(167,139,250,.12); color: var(--violet); }
+  .b-cn    { background: rgba(251,191,36,.12);  color: #fbbf24; }
+  .b-dbms  { background: rgba(52,211,153,.12);  color: #34d399; }
+  .b-java  { background: rgba(251,146,60,.12);  color: #fb923c; }
+  .b-oops  { background: rgba(232,121,249,.12); color: #e879f9; }
+  .b-other { background: rgba(139,148,158,.12); color: var(--muted); }
+
+  /* Hours mini bar */
+  .hours-bar { display: flex; align-items: center; gap: 8px; }
+  .hours-track { width: 64px; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .hours-fill  { height: 100%; border-radius: 3px; background: var(--indigo); }
+  .hours-num   { font-family: var(--mono); font-size: 12px; color: var(--muted); min-width: 28px; }
+
+  .action-btns { display: flex; gap: 6px; }
+
+  .empty-state { text-align: center; padding: 48px; color: var(--muted); font-size: 14px; }
+
+  /* ── Filter page ── */
+  .filter-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 18px; }
+  .filter-card h3 { font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-row .form-group { margin-bottom: 0; flex: 1; min-width: 130px; }
+  .results-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-family: var(--mono); }
+  .results-label strong { color: var(--indigo); }
+
+  /* ── Form modal ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+    z-index: 200; display: none;
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    width: 460px; max-width: 95vw; padding: 28px;
+    animation: modalIn .2s ease;
+  }
+  @keyframes modalIn { from { opacity:0; transform:scale(.95) translateY(-8px); } to { opacity:1; transform:scale(1); } }
+  .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .6px; }
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 9px 12px; font-size: 13.5px; font-family: var(--sans);
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--indigo); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── Toast ── */
+  .toast-stack { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 500; }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 18px; font-size: 13px; color: var(--text);
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    animation: toastIn .25s ease;
+    display: flex; align-items: center; gap: 10px; min-width: 220px;
+  }
+  @keyframes toastIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
+  .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .toast.success .toast-dot { background: var(--emerald); }
+  .toast.error   .toast-dot { background: var(--rose); }
+  .toast.info    .toast-dot { background: var(--indigo); }
+
+  /* ── Loading ── */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 56px; color: var(--muted); gap: 12px; font-size: 14px; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--indigo); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Section header ── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-header h2 { font-size: 14px; font-weight: 600; color: var(--text); }
+  .section-header span { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+  /* ── Info callout ── */
+  .callout {
+    background: rgba(99,102,241,.08);
+    border: 1px solid rgba(99,102,241,.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .callout-icon { color: var(--indigo); flex-shrink: 0; font-size: 15px; }
+
+  /* ── Auth screen ── */
+  .auth-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .auth-card {
+    width: 380px; max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+  }
+  .auth-logo { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 22px; }
+  .auth-logo .logo-icon { width: 38px; height: 38px; font-size: 16px; }
+  .auth-logo .logo-text { font-size: 19px; }
+  .auth-tabs { display: flex; background: var(--surface2); border-radius: 8px; padding: 3px; margin-bottom: 22px; }
+  .auth-tab {
+    flex: 1; text-align: center; padding: 8px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer;
+    background: none; border: none; transition: all .15s;
+  }
+  .auth-tab.active { background: var(--indigo); color: #fff; }
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+  .auth-error {
+    background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.25);
+    color: var(--rose); font-size: 12.5px; padding: 9px 12px; border-radius: 6px;
+    margin-bottom: 14px; display: none;
+  }
+  .auth-error.show { display: block; }
+  .auth-sub { font-size: 12.5px; color: var(--muted); text-align: center; margin-bottom: 22px; }
+
+  @media (max-width: 900px) {
+    .dash-grid { grid-template-columns: repeat(2,1fr); }
+    .ring-section { flex-direction: column; }
+  }
+  @media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .dash-grid { grid-template-columns: 1fr; }
+    .content { padding: 16px; }
+  }
+</style>
 </head>
 <body>
-    <h1>hello world,hehe springboot is fun</h1>
+
+<!-- ===========================
+     AUTH SCREEN (Login / Signup)
+=========================== -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">PP</div>
+      <div class="logo-text">Place<span>Prep</span></div>
+    </div>
+    <div class="auth-sub">Track your placement prep. Sign in to continue.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Log In</button>
+      <button class="auth-tab" id="tab-signup-btn" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <!-- Login form -->
+    <div class="auth-form active" id="form-login">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="e.g. rahul_dev" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-block" id="login-submit-btn" onclick="submitLogin()">Log In</button>
+    </div>
+
+    <!-- Signup form -->
+    <div class="auth-form" id="form-signup">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="signup-username" placeholder="Choose a username" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Choose a password" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary btn-block" id="signup-submit-btn" onclick="submitSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     APP SHELL
+=========================== -->
+<div id="app-shell" style="display:none">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">PP</div>
+    <div class="logo-text">Place<span>Prep</span></div>
+  </div>
+
+  <nav>
+    <div class="nav-section-label">Overview</div>
+    <button class="nav-item active" onclick="goPage('dashboard')">
+      <div class="ni-dot"></div> Dashboard
+    </button>
+
+    <div class="nav-section-label" style="margin-top:8px">Topics</div>
+    <button class="nav-item" onclick="goPage('topics')">
+      <div class="ni-dot"></div> All Topics
+    </button>
+    <button class="nav-item" onclick="openAddModal()">
+      <div class="ni-dot"></div> Add Topic
+    </button>
+
+    <div class="nav-section-label" style="margin-top:8px">Advanced</div>
+    <button class="nav-item" onclick="goPage('filter')">
+      <div class="ni-dot"></div> Filter & Search
+    </button>
+    <button class="nav-item" onclick="goPage('goal')">
+      <div class="ni-dot"></div> Study Goal
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div class="user-name" id="user-name">—</div>
+    </div>
+    <button class="logout-btn" onclick="logout()" title="Log out">⏻</button>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard <span>Overview</span></div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="refreshPage()">↺ Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Topic</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===========================
+         DASHBOARD PAGE
+    =========================== -->
+    <div class="page active" id="page-dashboard">
+
+      <div id="dash-loading" class="loading">
+        <div class="spinner"></div> Loading dashboard…
+      </div>
+
+      <div id="dash-content" style="display:none">
+
+        <!-- Stat cards — all from GET /dashboard -->
+        <div class="dash-grid">
+
+          <div class="stat-card c-indigo">
+            <div class="stat-label">Total Topics</div>
+            <div class="stat-value" id="d-total">—</div>
+            <div class="stat-sub">tracked in system</div>
+          </div>
+
+          <div class="stat-card c-green">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value" id="d-completed">—</div>
+            <div class="stat-sub">fully studied</div>
+          </div>
+
+          <div class="stat-card c-amber">
+            <div class="stat-label">On-Going</div>
+            <div class="stat-value" id="d-ongoing">—</div>
+            <div class="stat-sub">in progress</div>
+          </div>
+
+          <div class="stat-card c-rose">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="d-pending">—</div>
+            <div class="stat-sub">not yet started</div>
+          </div>
+
+          <div class="stat-card c-sky">
+            <div class="stat-label">DSA Topics</div>
+            <div class="stat-value" id="d-dsa">—</div>
+            <div class="stat-sub">data structures & algos</div>
+          </div>
+
+          <div class="stat-card c-violet">
+            <div class="stat-label">Total Hours</div>
+            <div class="stat-value" id="d-hours">—</div>
+            <div class="stat-sub">study hours logged</div>
+          </div>
+
+          <div class="stat-card c-sky">
+            <div class="stat-label">Avg Hours / Topic</div>
+            <div class="stat-value" id="d-avg">—</div>
+            <div class="stat-sub">efficiency metric</div>
+          </div>
+
+          <div class="stat-card c-green">
+            <div class="stat-label">Most Time Spent</div>
+            <div class="stat-value" id="d-top" style="font-size:18px;margin-top:4px">—</div>
+            <div class="stat-sub">highest hours topic</div>
+          </div>
+
+        </div>
+
+        <!-- Progress ring section -->
+        <div class="ring-section">
+
+          <div class="ring-wrap">
+            <svg class="progress-ring" width="140" height="140" viewBox="0 0 140 140">
+              <circle class="ring-bg" cx="70" cy="70" r="56" stroke-width="10"/>
+              <circle class="ring-fg" id="ring-fg" cx="70" cy="70" r="56"
+                      stroke-width="10"
+                      stroke-dasharray="351.86"
+                      stroke-dashoffset="351.86"/>
+            </svg>
+            <div class="ring-label">
+              <div class="ring-pct" id="ring-pct">0%</div>
+              <div class="ring-sub-text">completed</div>
+            </div>
+          </div>
+
+          <div class="ring-info">
+            <h2>Your Placement Progress</h2>
+            <p>Consistent preparation beats last-minute cramming. Track hours, complete topics, and keep the momentum going.</p>
+
+            <div class="progress-bar-row">
+              <span class="prog-label" style="color:var(--emerald)">Done</span>
+              <div class="prog-bar"><div class="prog-fill" id="pb-done" style="width:0%;background:var(--emerald)"></div></div>
+              <span class="prog-count" id="pb-done-n" style="color:var(--emerald)">0</span>
+            </div>
+            <div class="progress-bar-row">
+              <span class="prog-label" style="color:var(--amber)">On-Going</span>
+              <div class="prog-bar"><div class="prog-fill" id="pb-going" style="width:0%;background:var(--amber)"></div></div>
+              <span class="prog-count" id="pb-going-n" style="color:var(--amber)">0</span>
+            </div>
+            <div class="progress-bar-row">
+              <span class="prog-label" style="color:var(--rose)">Pending</span>
+              <div class="prog-bar"><div class="prog-fill" id="pb-pend" style="width:0%;background:var(--rose)"></div></div>
+              <span class="prog-count" id="pb-pend-n" style="color:var(--rose)">0</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===========================
+         TOPICS PAGE
+    =========================== -->
+    <div class="page" id="page-topics">
+
+      <div class="table-controls">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="search-q" placeholder="Search by name or category…" oninput="renderTopics()">
+        </div>
+
+        <select class="filter-sel" id="f-status-topics" onchange="renderTopics()">
+          <option value="">All Statuses</option>
+          <option value="Completed">Completed</option>
+          <option value="On-Going">On-Going</option>
+          <option value="Not started">Not Started</option>
+        </select>
+
+        <select class="filter-sel" id="f-cat-topics" onchange="renderTopics()">
+          <option value="">All Categories</option>
+          <option value="DSA">DSA</option>
+          <option value="JAVA">JAVA</option>
+          <option value="OOPS">OOPS</option>
+          <option value="OS">OS</option>
+          <option value="CN">CN</option>
+          <option value="DBMS">DBMS</option>
+        </select>
+
+        <button class="btn btn-ghost btn-sm" onclick="loadTopics()">↺</button>
+      </div>
+
+      <div id="topics-loading" class="loading"><div class="spinner"></div> Loading topics…</div>
+
+      <div class="table-wrap" id="topics-table-wrap" style="display:none">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Hours Spent</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="topics-tbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- ===========================
+         FILTER PAGE
+    =========================== -->
+    <div class="page" id="page-filter">
+
+      <div class="callout">
+        <span class="callout-icon">ℹ</span>
+        Use these advanced filters to explore your topics using the backend's custom query endpoints.
+      </div>
+
+      <!-- Filter 1: Status + Min Hours -->
+      <div class="filter-card">
+        <h3>Filter by Status + Min Hours</h3>
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="f1-status">
+              <option value="Completed">Completed</option>
+              <option value="On-Going">On-Going</option>
+              <option value="Not started">Not Started</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Min Hours Spent</label>
+            <input type="number" id="f1-hours" placeholder="e.g. 3" min="0" value="0">
+          </div>
+          <div class="form-group" style="flex:0">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="runFilter1()">Search →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter 2: Category + Hour Range -->
+      <div class="filter-card">
+        <h3>Filter by Category + Hour Range</h3>
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="f2-cat">
+              <option>DSA</option><option>JAVA</option><option>OOPS</option>
+              <option>OS</option><option>CN</option><option>DBMS</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Min Hours</label>
+            <input type="number" id="f2-min" placeholder="0" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label>Max Hours</label>
+            <input type="number" id="f2-max" placeholder="50" min="0" value="50">
+          </div>
+          <div class="form-group" style="flex:0">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="runFilter2()">Search →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter 3: Hours Less Than -->
+      <div class="filter-card">
+        <h3>Topics with Hours Less Than</h3>
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Max Hours (exclusive)</label>
+            <input type="number" id="f3-hours" placeholder="e.g. 5" min="1" value="5">
+          </div>
+          <div class="form-group" style="flex:0">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="runFilter3()">Search →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter 4: Category sorted by hours desc -->
+      <div class="filter-card">
+        <h3>Category Sorted by Hours (Most → Least)</h3>
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="f4-cat">
+              <option>DSA</option><option>JAVA</option><option>OOPS</option>
+              <option>OS</option><option>CN</option><option>DBMS</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:0">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="runFilter4()">Search →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="filter-results" style="display:none">
+        <div class="results-label">Showing <strong id="filter-count">0</strong> result(s)</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Category</th><th>Status</th><th>Hours</th></tr>
+            </thead>
+            <tbody id="filter-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===========================
+         GOAL PAGE
+    =========================== -->
+    <div class="page" id="page-goal">
+
+      <div class="callout">
+        <span class="callout-icon">🎯</span>
+        Set your total study hour target. The backend tracks progress against it via <strong>PUT /goal</strong>.
+      </div>
+
+      <div class="goal-card">
+        <h3>Study Hour Goal</h3>
+
+        <div id="goal-loading" class="loading" style="padding:20px"><div class="spinner"></div></div>
+
+        <div id="goal-content" style="display:none">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px">
+            <span>Goal progress</span>
+            <span><strong id="g-spent" style="color:var(--text)">0</strong>h / <strong id="g-target" style="color:var(--indigo)">0</strong>h target</span>
+          </div>
+          <div class="goal-bar-wrap">
+            <div class="goal-bar-fill" id="g-bar" style="width:0%"></div>
+          </div>
+          <div class="goal-meta">
+            <span id="g-pct">0% complete</span>
+            <span id="g-remaining">0h remaining</span>
+          </div>
+        </div>
+
+        <div class="goal-update-row" style="margin-top:18px">
+          <div>
+            <label>New target (hours)</label>
+            <input type="number" id="goal-input" placeholder="e.g. 200" min="1">
+          </div>
+          <button class="btn btn-primary" onclick="updateGoal()">Update Goal</button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+</div><!-- /app-shell -->
+
+<!-- ── Add / Edit Modal ── -->
+<div class="modal-backdrop" id="topic-modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">Add Topic</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+
+    <input type="hidden" id="m-id">
+
+    <div class="form-group">
+      <label>Topic Name <span style="color:var(--rose)">*</span></label>
+      <input type="text" id="m-name" placeholder="e.g. Binary Search Trees">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Category <span style="color:var(--rose)">*</span></label>
+        <select id="m-cat">
+          <option value="DSA">DSA</option>
+          <option value="JAVA">JAVA</option>
+          <option value="OOPS">OOPS</option>
+          <option value="OS">OS</option>
+          <option value="CN">CN</option>
+          <option value="DBMS">DBMS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status <span style="color:var(--rose)">*</span></label>
+        <select id="m-status">
+          <option value="Not started">Not Started</option>
+          <option value="On-Going">On-Going</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Hours Spent</label>
+      <input type="number" id="m-hours" placeholder="0" min="0" value="0">
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">
+      ⚠ TopicDTO does not expose <code style="color:var(--indigo)">id</code> — edits use the ID stored from the full topic list.
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitModal()">Save Topic</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast stack -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   IMPORTANT FIX NOTES vs original frontend:
+   1. API base changed from :8081 → :8080
+   2. Removed /dashboard/stats — only /dashboard exists
+   3. Status values: "On-Going" (not "on-going"), "Not started", "Completed"
+   4. TopicDTO has no id → we fetch full topics from GET /topics/{id} chain
+      and keep an id map internally (see allTopics cache with id field)
+   5. Added PUT /goal wiring on Goal page
+   6. Filter endpoint URLs matched exactly to controller:
+      - /topics/status/{status}/HoursSpent/{hours}
+      - /topics/category/{cat}/{min}/{max}
+      - /topics/hours-less-than/{n}
+      - /topics/category/{cat}/hours-desc
+   7. NEW: JWT auth wired against /auth/login (+/auth/register).
+      - UserDTO uses getUserName()/setUserName() so the JSON field is
+        "userName" (capital N), NOT "username" — matched exactly below.
+      - /auth/login returns a raw string token (not JSON) — read via .text()
+      - Token is kept in memory only (no localStorage — this preview
+        sandbox doesn't support it). If you host this file yourself,
+        swap the two TODOs below to persist the token in localStorage
+        so refresh doesn't log you out.
+══════════════════════════════════════════ */
+
+const API = 'http://localhost:8080';
+
+let authToken = null;      // TODO: swap for localStorage.getItem('ppToken') if self-hosting
+let currentUser = null;    // TODO: swap for localStorage.getItem('ppUser') if self-hosting
+
+/* allTopics stores the raw response — 
+   NOTE: TopicDTO does not include id, so we pair it with index.
+   You should add id to TopicDTO for proper edit/delete — see note below. */
+let allTopics = [];
+let maxHours = 1;
+
+// ─── Auth ───────────────────────────────────
+function switchAuthTab(tab) {
+  document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
+  document.getElementById('form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('form-signup').classList.toggle('active', tab === 'signup');
+  hideAuthError();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideAuthError() {
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+function setAuthBusy(btnId, busy, idleText) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Please wait…' : idleText;
+}
+
+async function submitLogin() {
+  hideAuthError();
+  const userName = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!userName || !password) { showAuthError('Enter both username and password.'); return; }
+
+  setAuthBusy('login-submit-btn', true, 'Log In');
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, password })
+    });
+
+    if (!res.ok) {
+      let msg = 'Invalid username or password';
+      try { const e = await res.json(); msg = e.message || JSON.stringify(e); } catch(_) {}
+      showAuthError(msg);
+      return;
+    }
+
+    // /auth/login returns the JWT as a raw string, not JSON
+    const token = (await res.text()).replace(/^"|"$/g, '');
+    authToken = token;
+    currentUser = userName;
+
+    toast(`Welcome back, ${userName} ✓`, 'success');
+    enterApp();
+  } catch (e) {
+    showAuthError(`Cannot connect to ${API}. Is Spring Boot running?`);
+  } finally {
+    setAuthBusy('login-submit-btn', false, 'Log In');
+  }
+}
+
+async function submitSignup() {
+  hideAuthError();
+  const userName = document.getElementById('signup-username').value.trim();
+  const password = document.getElementById('signup-password').value;
+
+  if (!userName || !password) { showAuthError('Enter both username and password.'); return; }
+  if (password.length < 4) { showAuthError('Password should be at least 4 characters.'); return; }
+
+  setAuthBusy('signup-submit-btn', true, 'Create Account');
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, password })
+    });
+
+    if (!res.ok) {
+      let msg = 'Could not create account';
+      try { const e = await res.json(); msg = e.message || JSON.stringify(e); } catch(_) {}
+      showAuthError(msg);
+      return;
+    }
+
+    toast('Account created — please log in ✓', 'success');
+    // Pre-fill and jump to the login tab
+    document.getElementById('login-username').value = userName;
+    document.getElementById('login-password').value = '';
+    switchAuthTab('login');
+  } catch (e) {
+    showAuthError(`Cannot connect to ${API}. Is Spring Boot running?`);
+  } finally {
+    setAuthBusy('signup-submit-btn', false, 'Create Account');
+  }
+}
+
+function enterApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = '';
+
+  document.getElementById('user-name').textContent = currentUser || '—';
+  document.getElementById('user-avatar').textContent = (currentUser || '?').charAt(0).toUpperCase();
+
+  goPage('dashboard');
+}
+
+function logout() {
+  authToken = null;
+  currentUser = null;
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  switchAuthTab('login');
+}
+
+/** Handles a 401/403 from any authenticated call by bouncing back to login. */
+function handleAuthFailure() {
+  toast('Session expired — please log in again', 'error');
+  logout();
+}
+
+// ─── Navigation ─────────────────────────────
+const pageTitles = {
+  dashboard: 'Dashboard <span>Overview</span>',
+  topics:    'All <span>Topics</span>',
+  filter:    'Filter <span>& Search</span>',
+  goal:      'Study <span>Goal</span>'
+};
+
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name)?.classList.add('active');
+  document.getElementById('page-title').innerHTML = pageTitles[name] || name;
+
+  // mark active nav item
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    const t = btn.textContent.toLowerCase().trim();
+    if (
+      (name === 'dashboard' && t.includes('dashboard')) ||
+      (name === 'topics'    && t.includes('all topics')) ||
+      (name === 'filter'    && t.includes('filter')) ||
+      (name === 'goal'      && t.includes('goal'))
+    ) btn.classList.add('active');
+  });
+
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'topics')    loadTopics();
+  if (name === 'goal')      loadGoal();
+}
+
+function refreshPage() {
+  const active = document.querySelector('.page.active')?.id?.replace('page-', '');
+  if (active) goPage(active);
+  toast('Refreshed', 'info');
+}
+
+// ─── Dashboard ──────────────────────────────
+// FIX: Only calls GET /dashboard (no /dashboard/stats endpoint exists)
+async function loadDashboard() {
+  show('dash-loading'); hide('dash-content');
+
+  try {
+    const d = await get('/dashboard');
+    if (d === null) return; // auth failure already handled
+
+    // Stat cards
+    set('d-total',     d.totalTopics);
+    set('d-completed', d.completedTopics);
+    set('d-ongoing',   d.ongoingTopics ?? '—');
+    set('d-pending',   d.pendingTopics);
+    set('d-dsa',       d.dsaTopics);
+    set('d-hours',     d.totalHoursSpent);
+    set('d-avg',       d.averageHoursSpent?.toFixed(1) ?? '0');
+    set('d-top',       d.mostTimeSpent ?? 'N/A');
+
+    // Progress ring
+    const pct = Math.round(d.completedPercentage ?? 0);
+    set('ring-pct', pct + '%');
+    const circ = 351.86;
+    const offset = circ - (pct / 100) * circ;
+    setTimeout(() => {
+      document.getElementById('ring-fg').style.strokeDashoffset = offset;
+    }, 100);
+
+    // Progress bars
+    const total = d.totalTopics || 1;
+    setBar('pb-done',  'pb-done-n',  d.completedTopics, total);
+    setBar('pb-going', 'pb-going-n', d.ongoingTopics ?? 0, total);
+    setBar('pb-pend',  'pb-pend-n',  d.pendingTopics,   total);
+
+    hide('dash-loading'); show('dash-content');
+
+  } catch(e) {
+    document.getElementById('dash-loading').innerHTML =
+      `<span style="color:var(--rose)">⚠ Cannot connect to ${API}. Is Spring Boot running?</span>`;
+  }
+}
+
+// ─── Topics ─────────────────────────────────
+// FIX: TopicDTO has no id field — this is a backend limitation.
+// Add `private int id;` + getter/setter to TopicDTO to fix edit/delete properly.
+// For now we use the entity id returned via the list (works if Spring serialises it).
+async function loadTopics() {
+  show('topics-loading'); hide('topics-table-wrap');
+
+  try {
+    const data = await get('/topics');
+    if (data === null) return; // auth failure already handled
+    allTopics = data;
+    maxHours  = Math.max(...allTopics.map(t => t.hoursSpent ?? 0), 1);
+    renderTopics();
+    hide('topics-loading'); show('topics-table-wrap');
+  } catch(e) {
+    document.getElementById('topics-loading').innerHTML =
+      `<span style="color:var(--rose)">⚠ Backend unreachable</span>`;
+  }
+}
+
+function renderTopics() {
+  const q  = document.getElementById('search-q').value.toLowerCase();
+  const sf = document.getElementById('f-status-topics').value;
+  const cf = document.getElementById('f-cat-topics').value;
+
+  const list = allTopics.filter(t =>
+    (!q  || t.name?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q)) &&
+    (!sf || t.status === sf) &&
+    (!cf || t.category === cf)
+  );
+
+  const tbody = document.getElementById('topics-tbody');
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No topics match your filters.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((t, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px;font-family:var(--mono)">${i + 1}</td>
+      <td style="font-weight:500">${t.name ?? '—'}</td>
+      <td><span class="badge ${catBadge(t.category)}">${t.category ?? '—'}</span></td>
+      <td><span class="badge ${statusBadge(t.status)}">${t.status ?? '—'}</span></td>
+      <td>
+        <div class="hours-bar">
+          <div class="hours-track">
+            <div class="hours-fill" style="width:${Math.min(100, ((t.hoursSpent ?? 0) / maxHours) * 100)}%"></div>
+          </div>
+          <span class="hours-num">${t.hoursSpent ?? 0}h</span>
+        </div>
+      </td>
+      <td>
+        <div class="action-btns">
+          <button class="btn btn-ghost btn-sm" onclick='openEditModal(${JSON.stringify(t)}, ${t.id ?? 0})'>Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTopic(${t.id ?? 0}, '${(t.name ?? '').replace(/'/g,"\\'")}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ─── CRUD ────────────────────────────────────
+function openAddModal() {
+  document.getElementById('modal-title-text').textContent = 'Add Topic';
+  document.getElementById('m-id').value    = '';
+  document.getElementById('m-name').value  = '';
+  document.getElementById('m-cat').value   = 'DSA';
+  document.getElementById('m-status').value = 'Not started';
+  document.getElementById('m-hours').value = '0';
+  document.getElementById('topic-modal').classList.add('open');
+}
+
+function openEditModal(t, id) {
+  document.getElementById('modal-title-text').textContent = 'Edit Topic';
+  document.getElementById('m-id').value     = id;
+  document.getElementById('m-name').value   = t.name ?? '';
+  document.getElementById('m-cat').value    = t.category ?? 'DSA';
+  document.getElementById('m-status').value = t.status ?? 'Not started';
+  document.getElementById('m-hours').value  = t.hoursSpent ?? 0;
+  document.getElementById('topic-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('topic-modal').classList.remove('open');
+}
+
+async function submitModal() {
+  const id = document.getElementById('m-id').value;
+  const body = {
+    name:       document.getElementById('m-name').value.trim(),
+    category:   document.getElementById('m-cat').value,
+    status:     document.getElementById('m-status').value,
+    hoursSpent: parseInt(document.getElementById('m-hours').value) || 0
+  };
+
+  if (!body.name) { toast('Topic name is required', 'error'); return; }
+
+  try {
+    let res;
+    if (id) {
+      // FIX: PUT /topics/{id}  (not /topics/id — correct path)
+      res = await authedFetch(`/topics/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+    } else {
+      res = await authedFetch(`/topics`, { method: 'POST', body: JSON.stringify(body) });
+    }
+    if (!res) return; // auth failure already handled
+
+    if (!res.ok) { const e = await res.json(); toast(JSON.stringify(e), 'error'); return; }
+    toast(id ? 'Topic updated ✓' : 'Topic added ✓', 'success');
+    closeModal();
+    loadTopics();
+  } catch(e) {
+    toast('Backend unreachable', 'error');
+  }
+}
+
+async function deleteTopic(id, name) {
+  if (!id) { toast('No ID — add id to TopicDTO to enable delete', 'error'); return; }
+  if (!confirm(`Delete "${name}"?`)) return;
+  try {
+    const res = await authedFetch(`/topics/${id}`, { method: 'DELETE' });
+    if (!res) return; // auth failure already handled
+    toast('Topic deleted', 'success');
+    loadTopics();
+  } catch(e) { toast('Backend unreachable', 'error'); }
+}
+
+// ─── Filters ─────────────────────────────────
+// FIX: All endpoint URLs matched exactly to TopicController
+
+async function runFilter1() {
+  // GET /topics/status/{status}/HoursSpent/{hoursSpent}
+  const status = document.getElementById('f1-status').value;
+  const hours  = parseInt(document.getElementById('f1-hours').value) || 0;
+  const data   = await get(`/topics/status/${encodeURIComponent(status)}/HoursSpent/${hours}`);
+  if (data === null) return;
+  showFilterResults(data);
+}
+
+async function runFilter2() {
+  // GET /topics/category/{category}/{minHours}/{maxHours}
+  const cat = document.getElementById('f2-cat').value;
+  const min = parseInt(document.getElementById('f2-min').value) || 0;
+  const max = parseInt(document.getElementById('f2-max').value) || 9999;
+  const data = await get(`/topics/category/${encodeURIComponent(cat)}/${min}/${max}`);
+  if (data === null) return;
+  showFilterResults(data);
+}
+
+async function runFilter3() {
+  // GET /topics/hours-less-than/{hoursSpent}
+  const hours = parseInt(document.getElementById('f3-hours').value) || 5;
+  const data  = await get(`/topics/hours-less-than/${hours}`);
+  if (data === null) return;
+  showFilterResults(data);
+}
+
+async function runFilter4() {
+  // GET /topics/category/{category}/hours-desc
+  const cat  = document.getElementById('f4-cat').value;
+  const data = await get(`/topics/category/${encodeURIComponent(cat)}/hours-desc`);
+  if (data === null) return;
+  showFilterResults(data);
+}
+
+function showFilterResults(list) {
+  show('filter-results');
+  set('filter-count', Array.isArray(list) ? list.length : 0);
+
+  if (!Array.isArray(list) || list.length === 0) {
+    document.getElementById('filter-tbody').innerHTML =
+      `<tr><td colspan="4" class="empty-state">No results found.</td></tr>`;
+    return;
+  }
+
+  document.getElementById('filter-tbody').innerHTML = list.map(t => `
+    <tr>
+      <td style="font-weight:500">${t.name ?? '—'}</td>
+      <td><span class="badge ${catBadge(t.category)}">${t.category ?? '—'}</span></td>
+      <td><span class="badge ${statusBadge(t.status)}">${t.status ?? '—'}</span></td>
+      <td><span style="font-family:var(--mono);font-size:13px;color:var(--muted)">${t.hoursSpent ?? 0}h</span></td>
+    </tr>
+  `).join('');
+}
+
+// ─── Goal ────────────────────────────────────
+// FIX: Wires PUT /goal endpoint (was missing entirely from original frontend)
+async function loadGoal() {
+  show('goal-loading'); hide('goal-content');
+  try {
+    const d = await get('/dashboard');
+    if (d === null) return; // auth failure already handled
+    set('g-spent',  d.totalHoursSpent ?? 0);
+    set('g-target', d.targetHours ?? 0);
+    set('g-pct',    (d.goalPercentage?.toFixed(1) ?? 0) + '% complete');
+    set('g-remaining', (d.remainingHours ?? 0) + 'h remaining');
+    const pct = Math.min(100, d.goalPercentage ?? 0);
+    document.getElementById('g-bar').style.width = pct + '%';
+    hide('goal-loading'); show('goal-content');
+  } catch(e) {
+    document.getElementById('goal-loading').innerHTML =
+      `<span style="color:var(--rose)">⚠ Backend unreachable</span>`;
+  }
+}
+
+async function updateGoal() {
+  const val = parseInt(document.getElementById('goal-input').value);
+  if (!val || val < 1) { toast('Enter a valid target hours value', 'error'); return; }
+  try {
+    const res = await authedFetch(`/goal`, { method: 'PUT', body: JSON.stringify({ targetHours: val }) });
+    if (!res) return; // auth failure already handled
+    if (res.ok) {
+      toast('Goal updated ✓', 'success');
+      document.getElementById('goal-input').value = '';
+      loadGoal();
+    } else {
+      toast('Failed to update goal', 'error');
+    }
+  } catch(e) { toast('Backend unreachable', 'error'); }
+}
+
+// ─── Badge helpers ────────────────────────────
+function statusBadge(s) {
+  // FIX: status values must match exactly — "On-Going", "Not started", "Completed"
+  if (s === 'Completed')  return 'b-completed';
+  if (s === 'On-Going')   return 'b-ongoing';
+  return 'b-notstarted';
+}
+
+function catBadge(c) {
+  const m = { DSA:'b-dsa', OS:'b-os', CN:'b-cn', DBMS:'b-dbms', JAVA:'b-java', OOPS:'b-oops' };
+  return m[c?.toUpperCase()] ?? 'b-other';
+}
+
+// ─── Tiny DOM / API helpers ───────────────────
+/** GET wrapper that attaches the Authorization header and handles 401/403. */
+async function get(path) {
+  const res = await fetch(API + path, {
+    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+  });
+  if (res.status === 401 || res.status === 403) { handleAuthFailure(); return null; }
+  if (!res.ok) throw res;
+  return res.json();
+}
+
+/** fetch wrapper for POST/PUT/DELETE that attaches auth + JSON content-type, and handles 401/403. */
+async function authedFetch(path, opts = {}) {
+  const headers = Object.assign(
+    { 'Content-Type': 'application/json' },
+    authToken ? { 'Authorization': `Bearer ${authToken}` } : {},
+    opts.headers || {}
+  );
+  const res = await fetch(API + path, { ...opts, headers });
+  if (res.status === 401 || res.status === 403) { handleAuthFailure(); return null; }
+  return res;
+}
+
+function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; }
+function show(id)     { const el = document.getElementById(id); if (el) el.style.display = ''; }
+function hide(id)     { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+function setBar(fillId, numId, val, total) {
+  const pct = Math.round(((val ?? 0) / total) * 100);
+  const fill = document.getElementById(fillId);
+  const num  = document.getElementById(numId);
+  if (fill) fill.style.width = pct + '%';
+  if (num)  num.textContent = val ?? 0;
+}
+
+// ─── Toast ───────────────────────────────────
+function toast(msg, type = 'info') {
+  const stack = document.getElementById('toast-stack');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-dot"></div>${msg}`;
+  stack.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ─── Modal backdrop close ─────────────────────
+document.getElementById('topic-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ─── Enter key submits auth forms ─────────────
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });
+document.getElementById('signup-password').addEventListener('keydown', e => { if (e.key === 'Enter') submitSignup(); });
+
+// ─── Init ─────────────────────────────────────
+// App only loads data once logged in (see enterApp()); auth screen shows by default.
+</script>
+
 </body>
 </html>
