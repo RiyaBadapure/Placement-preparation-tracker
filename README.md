@@ -74,7 +74,7 @@ src/main/resources/
 
 
 
-The API starts on **`http://localhost:8080`**.
+The API starts on **`https://placement-preparation-tracker-6.onrender.com`**.
 
 ### Open the frontend
 
