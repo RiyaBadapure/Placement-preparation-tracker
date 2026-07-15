@@ -37,6 +37,7 @@ public class TopicService {
     {
         TopicDTO dto=new TopicDTO();
 
+        dto.setId(topic.getId());
         dto.setName(topic.getName());
         dto.setCategory(topic.getCategory());
         dto.setStatus(topic.getStatus());
@@ -205,11 +206,11 @@ public class TopicService {
     dto.setTotalTopics(totalTopics);
     dto.setCompletedTopics(completedTopics);
 
-    dto.setPendingTopics(repository.countByStatus("Pending"));
+    dto.setPendingTopics(repository.countByStatus("Not Started"));
     dto.setDsaTopics(repository.countByCategory("DSA"));
     dto.setJavaTopics(repository.countByCategory("JAVA"));
     dto.setOopsTopics(repository.countByCategory("OOPS"));
-    dto.setOngoingTopics(repository.countByStatus("On-going"));
+    dto.setOngoingTopics(repository.countByStatus("On-Going"));
 
     dto.setTotalHoursSpent(safeTotalHours);
 
