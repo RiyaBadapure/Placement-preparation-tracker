@@ -206,7 +206,7 @@ public class TopicService {
     dto.setTotalTopics(totalTopics);
     dto.setCompletedTopics(completedTopics);
 
-    dto.setPendingTopics(repository.countByStatus("Not Started"));
+    dto.setPendingTopics(repository.countByStatus("Not started"));
     dto.setDsaTopics(repository.countByCategory("DSA"));
     dto.setJavaTopics(repository.countByCategory("JAVA"));
     dto.setOopsTopics(repository.countByCategory("OOPS"));
