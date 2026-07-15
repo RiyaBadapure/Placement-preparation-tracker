@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public class TopicDTO {
 
+    private int id;
+
     @NotBlank(message="Name cannot be empty")
     private String name;
     @NotBlank(message="Category cannot be empty")
@@ -12,6 +14,16 @@ public class TopicDTO {
     private String status;
     @Min(value=0,message="Hours spent cannot be negative")
     private int hoursSpent;
+
+    public int getId()
+    {
+        return id;
+    }
+
+    public void setId(int id)
+    {
+        this.id=id;
+    }
 
     
     public String getName()
